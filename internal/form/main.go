@@ -12,13 +12,23 @@ type Form struct {
 
 type Field interface {
 	AddValidator(errMsg string, validatorType ValidatorTypes, value interface{}) error
-	Validate() error
+	Validate(preRender bool) error
+	Render() error
 }
 
 type Validator struct {
 	CustomError string
 	Value       interface{}
 }
+
+type FieldTypes string
+
+const (
+	FieldTypes_Text  FieldTypes = "text"
+	FieldTypes_Int   FieldTypes = "int"
+	FieldTypes_Float FieldTypes = "float"
+	FieldTypes_Bool  FieldTypes = "bool"
+)
 
 type ValidatorTypes string
 
@@ -34,4 +44,14 @@ func NewForm() *Form {
 		Inputs: make(map[string]Field),
 		reader: reader,
 	}
+}
+
+func (f *Form) Render() error {
+	for _, input := range f.Inputs {
+		err := input.Render()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -9,26 +9,15 @@ import (
 
 func main() {
 	f := form.NewForm()
-	firstName, err := f.AddField("first name", "first name", form.FieldTypes_Text)
+	i1, err := f.AddTextField("name", "Name")
 	if err != nil {
-		log.Fatal("Failed to create a field: ", err)
+		log.Fatalf("%v", err)
 	}
-	firstName.AddValidator("Name is not Dima", form.ValidatorTypes_Eq, "Dima")
-
-	lastName, err := f.AddField("last name", "last name", form.FieldTypes_Text)
+	i1.AddValidator("too short", form.ValidatorTypes_Gt, "3")
+	err = f.Render()
 	if err != nil {
-		log.Fatal("Failed to create a field: ", err)
+		log.Fatalf("%v", err)
 	}
-	lastName.AddValidator("Last name is not Rev", form.ValidatorTypes_Eq, "Rev")
-
-	age, err := f.AddField("age", "age", form.FieldTypes_Int)
-	if err != nil {
-		log.Fatal("Failed to create a field: ", err)
-	}
-	age.AddValidator("Age is less then 18", form.ValidatorTypes_Gt, 19)
-
-	f.Render()
-
 	for key, input := range f.Inputs {
 		fmt.Printf("%v: %+v\n", key, input)
 	}

@@ -1,11 +1,17 @@
 package form
 
-import "errors"
+import (
+	"bufio"
+	"errors"
+	"fmt"
+)
 
 type TextField struct {
 	Label      string
 	Value      string
+	ValueType  FieldTypes
 	Validators map[ValidatorTypes]Validator
+	reader     *bufio.Reader
 }
 
 func (f *Form) AddTextField(id, label string) (*TextField, error) {
@@ -15,7 +21,9 @@ func (f *Form) AddTextField(id, label string) (*TextField, error) {
 	}
 	field := &TextField{
 		Label:      label,
+		ValueType:  FieldTypes_Text,
 		Validators: make(map[ValidatorTypes]Validator),
+		reader:     f.reader,
 	}
 	f.Inputs[id] = field
 	return field, nil
@@ -34,30 +42,54 @@ func (t *TextField) AddValidator(errMsg string, validatorType ValidatorTypes, va
 	return nil
 }
 
-func (t *TextField) Validate() error {
-	for _, validator := range t.Validators {
-		if validatorType, ok := validator.Value.(ValidatorTypes); ok {
-			switch validatorType {
-			case ValidatorTypes_Gt:
-				intValue, ok := validator.Value.(int)
-				if !ok {
-					return errors.New("invalid value type for text field validator")
-				}
-				if len(t.Value) < intValue {
-					return errors.New(validator.CustomError)
-				}
+func (t *TextField) Validate(preRender bool) error {
+	for validatorType, validator := range t.Validators {
+		switch validatorType {
+		case ValidatorTypes_Gt:
+			intValue, ok := validator.Value.(int)
+			if !ok {
+				return fmt.Errorf("invalid value type for field [%v]", t.Label)
+			}
+			if len(t.Value) <= intValue && !preRender {
+				return errors.New(validator.CustomError)
+			}
 
-			case ValidatorTypes_Lt:
-				intValue, ok := validator.Value.(int)
-				if !ok {
-					return errors.New("invalid value type for text field validator")
-				}
-				if len(t.Value) > intValue {
-					return errors.New(validator.CustomError)
-				}
+		case ValidatorTypes_Lt:
+			intValue, ok := validator.Value.(int)
+			if !ok {
+				return fmt.Errorf("invalid value type for field [%v]", t.Label)
+			}
+			if len(t.Value) >= intValue && !preRender {
+				return errors.New(validator.CustomError)
+			}
+
+		case ValidatorTypes_Eq:
+			intValue, ok := validator.Value.(int)
+			if !ok {
+				return fmt.Errorf("invalid value type for field [%v]", t.Label)
+			}
+			if len(t.Value) != intValue && !preRender {
+				return errors.New(validator.CustomError)
 			}
 		}
-
 	}
+	return nil
+}
+
+func (t *TextField) Render() error {
+	err := t.Validate(true)
+	if err != nil {
+		return fmt.Errorf("form-definition error: %v", err)
+	}
+	fmt.Print(t.Label, ": ")
+	val, err := t.reader.ReadString('\n')
+	if err != nil {
+		return err
+	}
+	err = t.Validate(false)
+	if err != nil {
+		return fmt.Errorf("user-input error: %v", err)
+	}
+	t.Value = val
 	return nil
 }
