@@ -9,19 +9,19 @@ import (
 
 func main() {
 	f := form.NewForm()
-	firstName, err := f.AddInput("first name", "first name", form.FieldTypes_Text)
+	firstName, err := f.AddField("first name", "first name", form.FieldTypes_Text)
 	if err != nil {
 		log.Fatal("Failed to create a field: ", err)
 	}
 	firstName.AddValidator("Name is not Dima", form.ValidatorTypes_Eq, "Dima")
 
-	lastName, err := f.AddInput("last name", "last name", form.FieldTypes_Text)
+	lastName, err := f.AddField("last name", "last name", form.FieldTypes_Text)
 	if err != nil {
 		log.Fatal("Failed to create a field: ", err)
 	}
 	lastName.AddValidator("Last name is not Rev", form.ValidatorTypes_Eq, "Rev")
 
-	age, err := f.AddInput("age", "age", form.FieldTypes_Int)
+	age, err := f.AddField("age", "age", form.FieldTypes_Int)
 	if err != nil {
 		log.Fatal("Failed to create a field: ", err)
 	}
